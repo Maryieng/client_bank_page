@@ -10,6 +10,7 @@ python = "^3.12"
 flake8 = "^6.1.0"
 isort = "^5.12.0"
 mypy = "^1.7.1"
+black = "^23.11.0"
 
 
 [build-system]
@@ -24,3 +25,20 @@ no_implicit_optional = true
 warn_return_any = true
 exclude = 'venv'
 ignore_missing_imports = true
+
+[tool.black]
+line-length = 119
+exclude = '''
+(
+  /(
+      \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | dist
+  )/
+  | foo.py
+)
+'''
