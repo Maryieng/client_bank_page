@@ -1,14 +1,21 @@
 import json
 import os
 from typing import Any
-
 import yfinance as yf
 import pandas as pd
 import requests
 from dotenv import load_dotenv
 from datetime import datetime
 import datetime
+import logging
 load_dotenv()
+
+logger = logging.getLogger('__func_utils__')
+file_handler_masks = logging.FileHandler('utils_loger.log', 'w', encoding='utf-8')
+file_formatter_masks = logging.Formatter('%(asctime)s %(module)s %(levelname)s %(message)s')
+file_handler_masks.setFormatter(file_formatter_masks)
+logger.addHandler(file_handler_masks)
+logger.setLevel(logging.INFO)
 
 
 def data_currency_and_share_request(filename: str) -> Any:
@@ -18,11 +25,12 @@ def data_currency_and_share_request(filename: str) -> Any:
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             text = json.load(f)
+            logger.info('Успешно. data_currency_and_share_request()')
     except FileNotFoundError:
-        print("Файл не найден.")
+        logger.error(f'Файл не найден. data_currency_and_share_request()')
         return [], []
     except Exception as e:
-        print(f"Ошибка при чтении файла: {e}")
+        logger.error(f'Ошибка при чтении файла. data_currency_and_share_request()')
         return [], []
     api_key_currency = os.getenv('api_key_openexchangerates')
     exchange_rates = []
@@ -40,12 +48,13 @@ def data_currency_and_share_request(filename: str) -> Any:
             if "currentPrice" in stock_info:
                 current_price = stock_info["currentPrice"]
                 share_prices.append({"Акция": stocks, "Цена": current_price})
+        logger.info('Успешно. data_currency_and_share_request()')
         return exchange_rates, share_prices
     except requests.exceptions.RequestException as e:
-        print(f"Произошла ошибка при выполнении запроса API: {e}")
+        logger.error(f"Произошла ошибка при выполнении запроса API: {e}")
         return [], []
     except Exception as e:
-        print(f"Произошла ошибка: {e}")
+        logger.error(f"Произошла ошибка: {e}")
         return [], []
 
 
@@ -61,21 +70,23 @@ def greetings() -> str:
         greet = opts["hey"][2]
     elif now.hour >= 0 and now.hour <= 4:
         greet = opts["hey"][3]
+    logger.info("Успешно. greetings()")
     return greet
 
 
-def reading_data_from_file(filename: str) -> Any:
+def reading_data_from_file(filename: str) -> pd.DataFrame:
     """ Чтение данных из файла .xls """
     try:
         current_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         file_path = os.path.join(current_directory, 'data', filename)
+        logger.info('Успешно reading_data_from_file()')
         return pd.read_excel(file_path, na_values=["NA", "N/A", "missing"])
     except FileNotFoundError:
-        print("Файл не найден.")
-        return None
+        logger.error("Файл не найден.")
+        return pd.DataFrame()
     except Exception as e:
-        print(f"Произошла ошибка при чтении файла: {e}")
-        return None
+        logger.error(f"Произошла ошибка при чтении файла: {e}")
+        return pd.DataFrame()
 
 
 def outputting_statistics_based_on_data(user_date: str) -> pd.DataFrame:
@@ -89,9 +100,10 @@ def outputting_statistics_based_on_data(user_date: str) -> pd.DataFrame:
         start_mounth = date_obj.replace(day=1)
         data_in_interval = data_for_filter_by_date[(data_for_filter_by_date['Дата операции'] >= start_mounth) &
                                     (data_for_filter_by_date['Дата операции'] <= end_date + pd.DateOffset(days=1))]
+        logger.info('Успешно. outputting_statistics_based_on_data()')
         return data_in_interval[data_in_interval['Валюта платежа'] == "RUB"]
     except Exception as e:
-            print("Произошла ошибка: ", str(e))
+            logger.error("Произошла ошибка: ", str(e))
             return pd.DataFrame()
 
 
@@ -100,7 +112,8 @@ def writing_data_to_json(operations: pd.DataFrame) -> list:
     try:
         json_string = operations.to_json(orient='records', force_ascii=False)
         json_data = json.loads(json_string)
+        logger.info("Успешно. writing_data_to_json()")
         return json_data
     except Exception as e:
-        print(f"Произошла ошибка при преобразовании DataFrame в JSON: {e}")
+        logger.error(f"Произошла ошибка при преобразовании DataFrame в JSON: {e}")
         return []
