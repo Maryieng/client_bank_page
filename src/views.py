@@ -1,6 +1,13 @@
 from collections import OrderedDict
 from src.utils import greetings, data_currency_and_share_request
+import logging
 
+logger = logging.getLogger('__func_views__')
+file_handler_masks = logging.FileHandler('views_loger.log', 'w', encoding='utf-8')
+file_formatter_masks = logging.Formatter('%(asctime)s %(module)s %(levelname)s %(message)s')
+file_handler_masks.setFormatter(file_formatter_masks)
+logger.addHandler(file_handler_masks)
+logger.setLevel(logging.INFO)
 
 def displaying_statistics_on_cards(json_data: list) -> dict:
     """ возвращает json-ответ в формате: 1. Приветствие 2. По каждой карте: Последние 4 цифры карты,
@@ -33,7 +40,9 @@ def displaying_statistics_on_cards(json_data: list) -> dict:
         final_list_for_the_user["Курсы валют"] = [*currencies]
         final_list_for_the_user["Цены на акции"] = [*stocks]
         final_list_for_the_user_dict = dict(final_list_for_the_user)
+        logger.info('Успешно. displaying_statistics_on_cards()')
         return final_list_for_the_user_dict
     except Exception as e:
         error_message = f"Произошла ошибка: {str(e)}"
+        logger.error(f'Произошла ошибка:", {str(e)} в функции displaying_statistics_on_cards()')
         return {"Ошибка": error_message}
