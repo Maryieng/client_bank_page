@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+
 import pandas as pd
 
 
@@ -9,7 +10,7 @@ def write_result_to_file(filename=None):
             result = func(*args, **kwargs)
             if filename is None:
                 timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                file_name = f"{timestamp}.txt"
+                filename == f"{timestamp}.txt"
             with open(filename, "w", encoding='utf-8') as file:
                 file.write(result.to_string(index=False))
             return result
@@ -24,16 +25,16 @@ def spending_by_category(operations: pd.DataFrame, category: str, date: Optional
      (от переданной даты)."""
     try:
         if date is None:
-            date = datetime.now().date()  # Current date
+            date = datetime.now().date()  # type: ignore
         else:
-            date = datetime.strptime(date, "%Y-%m-%d").date()
-        three_months_ago = date - timedelta(days=3 * 30)
+            date = datetime.strptime(date, "%Y-%m-%d").date()  # type: ignore
+        three_months_ago = date - timedelta(days=3 * 30)  # type: ignore
         filtered_df = operations.copy()
         filtered_df['Дата платежа'] = pd.to_datetime(filtered_df['Дата платежа'], dayfirst=True)
-        filtered_df = filtered_df[(filtered_df['Категория'] == category) &
-                                  (filtered_df['Дата платежа'] >= pd.to_datetime(three_months_ago)) &
-                                  (filtered_df['Дата платежа'] <= pd.to_datetime(date))]
+        filtered_df = filtered_df[(filtered_df['Категория'] == category)
+                                  & (filtered_df['Дата платежа'] >= pd.to_datetime(three_months_ago))
+                                  & (filtered_df['Дата платежа'] <= pd.to_datetime(date))]
         return filtered_df
     except Exception as e:
-            print("Произошла ошибка:", str(e))
-            return pd.DataFrame()
+        print("Произошла ошибка:", str(e))
+        return pd.DataFrame()

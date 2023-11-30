@@ -1,13 +1,14 @@
+import datetime
 import json
+import logging
 import os
 from typing import Any
-import yfinance as yf
+
 import pandas as pd
 import requests
+import yfinance as yf
 from dotenv import load_dotenv
-from datetime import datetime
-import datetime
-import logging
+
 load_dotenv()
 
 logger = logging.getLogger('__func_utils__')
@@ -27,21 +28,19 @@ def data_currency_and_share_request(filename: str) -> Any:
             text = json.load(f)
             logger.info('Успешно. data_currency_and_share_request()')
     except FileNotFoundError:
-        logger.error(f'Файл не найден. data_currency_and_share_request()')
-        return [], []
-    except Exception as e:
-        logger.error(f'Ошибка при чтении файла. data_currency_and_share_request()')
+        logger.error('Файл не найден. data_currency_and_share_request()')
         return [], []
     api_key_currency = os.getenv('api_key_openexchangerates')
     exchange_rates = []
     share_prices = []
     try:
         for currency in text['user_currencies']:
-            url_currency = f"https://openexchangerates.org/api/latest.json?app_id={api_key_currency}&symbols={currency},RUB"
+            url_currency = (f"https://openexchangerates.org/api/latest.json?app_id={api_key_currency}&symbols="
+                            f"{currency},RUB")
             data_currency = requests.get(url_currency).json()
             rates_currency = data_currency["rates"]
             exchange_rate = 1 / rates_currency[currency] * rates_currency['RUB']
-            exchange_rates.append({"Валюта": currency, "Цена": exchange_rate})
+            exchange_rates.append({"Валюта": currency, "Цена": round(exchange_rate, 2)})
         for stocks in text['user_stocks']:
             symbol = yf.Ticker(stocks)
             stock_info = symbol.info
@@ -50,9 +49,6 @@ def data_currency_and_share_request(filename: str) -> Any:
                 share_prices.append({"Акция": stocks, "Цена": current_price})
         logger.info('Успешно. data_currency_and_share_request()')
         return exchange_rates, share_prices
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Произошла ошибка при выполнении запроса API: {e}")
-        return [], []
     except Exception as e:
         logger.error(f"Произошла ошибка: {e}")
         return [], []
@@ -83,10 +79,7 @@ def reading_data_from_file(filename: str) -> pd.DataFrame:
         return pd.read_excel(file_path, na_values=["NA", "N/A", "missing"])
     except FileNotFoundError:
         logger.error("Файл не найден.")
-        return pd.DataFrame()
-    except Exception as e:
-        logger.error(f"Произошла ошибка при чтении файла: {e}")
-        return pd.DataFrame()
+        raise FileNotFoundError("Файл не найден.")
 
 
 def outputting_statistics_based_on_data(user_date: str) -> pd.DataFrame:
@@ -94,20 +87,21 @@ def outputting_statistics_based_on_data(user_date: str) -> pd.DataFrame:
     try:
         data_for_filter_by_date = reading_data_from_file('operations.xls')
         data_for_filter_by_date['Дата операции'] = pd.to_datetime(data_for_filter_by_date['Дата операции'],
-                                                                format='%d.%m.%Y %H:%M:%S')
+                                                                  format='%d.%m.%Y %H:%M:%S')
         date_obj = datetime.datetime.strptime(user_date, '%Y-%m-%d')
         end_date = pd.to_datetime(user_date)
         start_mounth = date_obj.replace(day=1)
-        data_in_interval = data_for_filter_by_date[(data_for_filter_by_date['Дата операции'] >= start_mounth) &
-                                    (data_for_filter_by_date['Дата операции'] <= end_date + pd.DateOffset(days=1))]
+        data_in_interval = data_for_filter_by_date[(data_for_filter_by_date['Дата операции'] >= start_mounth)
+                                                   & (data_for_filter_by_date['Дата операции'] <= end_date
+                                                      + pd.DateOffset(days=1))]
         logger.info('Успешно. outputting_statistics_based_on_data()')
         return data_in_interval[data_in_interval['Валюта платежа'] == "RUB"]
     except Exception as e:
-            logger.error("Произошла ошибка: ", str(e))
-            return pd.DataFrame()
+        logger.error("Произошла ошибка: ", str(e))
+        return pd.DataFrame()
 
 
-def writing_data_to_json(operations: pd.DataFrame) -> list:
+def writing_data_to_json(operations: pd.DataFrame) -> Any:
     """ преобразование DataFrames в JSON список """
     try:
         json_string = operations.to_json(orient='records', force_ascii=False)
