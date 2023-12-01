@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
+import yfinance as yf
 from dotenv import load_dotenv
 from freezegun import freeze_time
 
@@ -93,3 +94,29 @@ class TestDataCurrencyAndShareRequest(unittest.TestCase):
 
 def test_data_currency_and_share_request_error_read():
     assert data_currency_and_share_request('dd') == ([], [])
+
+
+def get_share_prices(text):
+    share_prices = []
+
+    for stock in text['user_stocks']:
+        symbol = yf.Ticker(stock)
+        stock_info = symbol.info
+
+        if "currentPrice" in stock_info:
+            current_price = stock_info["currentPrice"]
+            share_prices.append({"Акция": stock, "Цена": current_price})
+
+    return share_prices
+
+
+class SharePriceTests(unittest.TestCase):
+    def test_share_prices_empty_when_no_current_price(self):
+        text = {'user_stocks': ['AAPL', 'GOOG']}
+        expected_share_prices = []
+
+        with patch.object(yf.Ticker, 'info') as mock_info:
+            mock_info.return_value = {}
+            share_prices = get_share_prices(text)
+
+        self.assertEqual(share_prices, expected_share_prices)
