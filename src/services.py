@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Any
-
+import re
 from src.utils import reading_data_from_file
 
 logger = logging.getLogger('__func_services__')
@@ -25,3 +25,17 @@ def simple_search(request: str) -> Any:
     except Exception as e:
         logger.error(f'Произошла ошибка: {str(e)} в функции simple_search()')
         return []
+
+
+def search_phone_numbers() -> Any:
+    """ Функция возвращает JSON со всеми транзакциями, содержащими в описании мобильные номера """
+    try:
+        list_transactions = reading_data_from_file('operations.xls')
+        pattern = re.compile(r'\d{3}-\d{2}-\d{2}')
+        list_from_mobile = list_transactions[list_transactions['Описание'].str.contains(pattern, regex=True)]
+        search_results_json = list_from_mobile.to_json(orient="records", force_ascii=False)
+        logger.info('Успешно. simple_search()')
+        return json.loads(search_results_json)
+    except Exception as e:
+            logger.error(f'Произошла ошибка: {str(e)} в функции simple_search()')
+            return 'Не найдено'
