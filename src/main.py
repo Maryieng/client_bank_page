@@ -1,5 +1,7 @@
+from pprint import pprint
+
 from src.reports import spending_by_category
-from src.services import simple_search
+from src.services import simple_search, search_phone_numbers
 from src.utils import (data_currency_and_share_request, outputting_statistics_based_on_data, reading_data_from_file,
                        writing_data_to_json)
 from src.views import displaying_statistics_on_cards
@@ -16,7 +18,12 @@ user_decision_to_find_the_value = input("""Воспользоваться пои
 if user_decision_to_find_the_value == 'да':
     user_request = input("""Введите слово/словосочетание для поиска операций:
     """)
-    print(simple_search(user_request))
+    pprint(simple_search(user_request))
+
+user_decision_by_number = input("""Воспользоваться поиском операций с телефонными номерами? Да/Нет
+""").lower()
+if user_decision_by_number == 'да':
+    print(search_phone_numbers())
 
 user_decision_by_category = input("""Воспользоваться фильтром по категории? Да/Нет
 """).lower()
