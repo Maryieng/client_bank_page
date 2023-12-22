@@ -41,7 +41,7 @@ def spending_by_category(operations: pd.DataFrame, category: str, date: Optional
         print("Произошла ошибка:", str(e))
         return pd.DataFrame()
 
-
+@write_result_to_file('my_result.txt')
 def spending_by_day_week(operations: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:
     """ Функция принимает на вход: датафрейм с транзакциями и опциональную дату,
      по умолчанию текущая дата. Функция возвращает средние траты в каждый из дней недели."""
@@ -56,4 +56,25 @@ def spending_by_day_week(operations: pd.DataFrame, date: Optional[str] = None) -
         'Сумма операции с округлением'].mean()
     return average_spending.reset_index()
 
-print(spending_by_day_week(reading_data_from_file('operations.xls')), '29-12-2021')
+@write_result_to_file('my_result.txt')
+def spending_by_workday(transactions: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:
+    if date is None:
+        date = pd.to_datetime(datetime.now().date())
+    else:
+        date = pd.to_datetime(date)
+    transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], dayfirst=True)
+    start_date = date - timedelta(days=3 * 30)
+    recent_transactions = transactions[(transactions['Дата операции'] >= start_date) &
+                                       (transactions['Дата операции'] <= date)]
+
+    weekdays_transactions = recent_transactions[recent_transactions['Дата операции'].dt.weekday < 5]
+    weekends_transactions = recent_transactions[recent_transactions['Дата операции'].dt.weekday >= 5]
+
+    average_spending_weekdays = weekdays_transactions['Сумма операции с округлением'].mean()
+    average_spending_weekends = weekends_transactions['Сумма операции с округлением'].mean()
+
+    # Создаем датафрейм с результатами
+    result_df = pd.DataFrame({'Средние траты': [average_spending_weekdays, average_spending_weekends]},
+                             index=['Рабочий день', 'Выходной день'])
+
+    return result_df
