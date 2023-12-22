@@ -3,8 +3,6 @@ from typing import Optional
 
 import pandas as pd
 
-from src.utils import reading_data_from_file
-
 
 def write_result_to_file(filename=None):
     def decorator(func):
@@ -41,6 +39,7 @@ def spending_by_category(operations: pd.DataFrame, category: str, date: Optional
         print("Произошла ошибка:", str(e))
         return pd.DataFrame()
 
+
 @write_result_to_file('my_result.txt')
 def spending_by_day_week(operations: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:
     """ Функция принимает на вход: датафрейм с транзакциями и опциональную дату,
@@ -49,23 +48,27 @@ def spending_by_day_week(operations: pd.DataFrame, date: Optional[str] = None) -
         date = pd.to_datetime(datetime.now().date())
     else:
         date = pd.to_datetime(date)
-    three_months_ago = date - timedelta(days=3 * 30)
+    three_months_ago = date - timedelta(days=3 * 30)  # type: ignore
     operations['Дата платежа'] = pd.to_datetime(operations['Дата платежа'], format="%d.%m.%Y", dayfirst=True)
     filtered_df = operations[(operations['Дата платежа'] >= three_months_ago) & (operations['Дата платежа'] <= date)]
     average_spending = filtered_df.groupby(filtered_df['Дата платежа'].dt.dayofweek)[
         'Сумма операции с округлением'].mean()
     return average_spending.reset_index()
 
+
 @write_result_to_file('my_result.txt')
 def spending_by_workday(transactions: pd.DataFrame, date: Optional[str] = None) -> pd.DataFrame:
+    """ Функция принимает на вход: датафрейм с транзакциями и опциональную дату,
+         по умолчанию текущая дата. Функция  выводит средние траты в рабочий и в выходной день за последние 3
+          месяца (от переданной даты)."""
     if date is None:
         date = pd.to_datetime(datetime.now().date())
     else:
         date = pd.to_datetime(date)
     transactions['Дата операции'] = pd.to_datetime(transactions['Дата операции'], dayfirst=True)
-    start_date = date - timedelta(days=3 * 30)
-    recent_transactions = transactions[(transactions['Дата операции'] >= start_date) &
-                                       (transactions['Дата операции'] <= date)]
+    start_date = date - timedelta(days=3 * 30)  # type: ignore
+    recent_transactions = transactions[(transactions['Дата операции'] >= start_date)
+                                       & (transactions['Дата операции'] <= date)]
 
     weekdays_transactions = recent_transactions[recent_transactions['Дата операции'].dt.weekday < 5]
     weekends_transactions = recent_transactions[recent_transactions['Дата операции'].dt.weekday >= 5]

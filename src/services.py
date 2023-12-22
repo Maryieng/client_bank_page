@@ -1,12 +1,8 @@
 import json
 import logging
-import datetime
-import math
-from pprint import pprint
-
-import pandas as pd
-from typing import Any
 import re
+from typing import Any
+
 from src.utils import reading_data_from_file
 
 logger = logging.getLogger('__func_services__')
@@ -42,8 +38,8 @@ def search_phone_numbers() -> Any:
         logger.info('Успешно. simple_search()')
         return json.loads(search_results_json)
     except Exception as e:
-            logger.error(f'Произошла ошибка: {str(e)} в функции simple_search()')
-            return 'Не найдено'
+        logger.error(f'Произошла ошибка: {str(e)} в функции simple_search()')
+        return 'Не найдено'
 
 
 def search_transfers_to_individuals() -> Any:

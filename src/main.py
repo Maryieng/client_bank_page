@@ -1,7 +1,7 @@
 from pprint import pprint
 
 from src.reports import spending_by_category
-from src.services import simple_search, search_phone_numbers, search_transfers_to_individuals
+from src.services import search_phone_numbers, search_transfers_to_individuals, simple_search
 from src.utils import (data_currency_and_share_request, outputting_statistics_based_on_data, reading_data_from_file,
                        writing_data_to_json)
 from src.views import displaying_statistics_on_cards
